@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<!-- saved from url=(0046)http://www.cnblogs.com/clearsky/p/5696286.html -->
+<html lang="zh-cn"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>css 盒子模型理解 - 千与千寻* - 博客园</title>
+<link type="text/css" rel="stylesheet" href="./css 盒子模型理解 - 千与千寻_ - 博客园_files/blog-common.css">
+<link id="MainCss" type="text/css" rel="stylesheet" href="./css 盒子模型理解 - 千与千寻_ - 博客园_files/bundle-BlueSky.css">
+<link type="text/css" rel="stylesheet" href="./css 盒子模型理解 - 千与千寻_ - 博客园_files/295211.css">
+<link id="mobile-style" media="only screen and (max-width: 768px)" type="text/css" rel="stylesheet" href="./css 盒子模型理解 - 千与千寻_ - 博客园_files/bundle-BlueSky-mobile.css">
+<link title="RSS" type="application/rss+xml" rel="alternate" href="http://www.cnblogs.com/clearsky/rss">
+<link title="RSD" type="application/rsd+xml" rel="EditURI" href="http://www.cnblogs.com/clearsky/rsd.xml">
+<link type="application/wlwmanifest+xml" rel="wlwmanifest" href="http://www.cnblogs.com/clearsky/wlwmanifest.xml">
+<script async="" src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/analytics.js.下载"></script><script type="text/javascript" src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/encoder.js.下载"></script><script src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/jquery.js.下载" type="text/javascript"></script>  
+<script type="text/javascript">var currentBlogApp = 'clearsky', cb_enable_mathjax=false;var isLogined=false;</script>
+<script src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/blog-common.js.下载" type="text/javascript"></script>
+<style type="text/css" abt="234"></style><script>//console.log('a')
+</script><script>doAdblock();
+function doAdblock(){
+    (function() {
+        function A() {}
+        A.prototype = {
+            rules: {
+                'pps_pps': {
+                    'find': /^http:\/\/www\.iqiyi\.com\/player\/cupid\/common\/pps_flvplay_s\.swf/,
+                    'replace': 'http://swf.adtchrome.com/pps_20140420.swf'
+                },
+                '17173_in':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/PreloaderFile(Customer)?\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173_in_20150522.swf"
+                },
+                '17173_out':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/PreloaderFileFirstpage\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173_out_20150522.swf"
+                },
+                '17173_live':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/Player_stream(_firstpage)?\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173_stream_20150522.swf"
+                },
+                '17173_live_out':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/Player_stream_(custom)?Out\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173.out.Live.swf"
+                }
+            },
+            _done: null,
+            get done() {
+                if(!this._done) {
+                    this._done = new Array();
+                }
+                return this._done;
+            },
+            addAnimations: function() {
+                var style = document.createElement('style');
+                style.type = 'text/css';
+                style.innerHTML = 'object,embed{\
+                -webkit-animation-duration:.001s;-webkit-animation-name:playerInserted;\
+                -ms-animation-duration:.001s;-ms-animation-name:playerInserted;\
+                -o-animation-duration:.001s;-o-animation-name:playerInserted;\
+                animation-duration:.001s;animation-name:playerInserted;}\
+                @-webkit-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}\
+                @-ms-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}\
+                @-o-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}\
+                @keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}';
+                document.getElementsByTagName('head')[0].appendChild(style);
+            },
+            animationsHandler: function(e) {
+                if(e.animationName === 'playerInserted') {
+                    this.replace(e.target);
+                }
+            },
+            replace: function(elem) {
+                if (/http:\/\/v.youku.com\/v_show\/.*/.test(window.location.href)){
+                    var tag = document.getElementById("playerBox").getAttribute("player")
+                    if (tag == "adt"){
+                        console.log("adt adv")
+                        return;
+                    }
+                }
+                if(this.done.indexOf(elem) != -1) return;
+                this.done.push(elem);
+                var player = elem.data || elem.src;
+                if(!player) return;
+                var i, find, replace = false;
+                for(i in this.rules) {
+                    find = this.rules[i]['find'];
+                    if(find.test(player)) {
+                        replace = this.rules[i]['replace'];
+                        if('function' === typeof this.rules[i]['preHandle']) {
+                            this.rules[i]['preHandle'].bind(this, elem, find, replace, player)();
+                        }else{
+                            this.reallyReplace.bind(this, elem, find, replace)();
+                        }
+                        break;
+                    }
+                }
+            },
+            reallyReplace: function(elem, find, replace) {
+                elem.data && (elem.data = elem.data.replace(find, replace)) || elem.src && ((elem.src = elem.src.replace(find, replace)) && (elem.style.display = 'block'));
+                var b = elem.querySelector("param[name='movie']");
+                this.reloadPlugin(elem);
+            },
+            reloadPlugin: function(elem) {
+                var nextSibling = elem.nextSibling;
+                var parentNode = elem.parentNode;
+                parentNode.removeChild(elem);
+                var newElem = elem.cloneNode(true);
+                this.done.push(newElem);
+                if(nextSibling) {
+                    parentNode.insertBefore(newElem, nextSibling);
+                } else {
+                    parentNode.appendChild(newElem);
+                }
+            },
+            init: function() {
+                var handler = this.animationsHandler.bind(this);
+                document.body.addEventListener('webkitAnimationStart', handler, false);
+                document.body.addEventListener('msAnimationStart', handler, false);
+                document.body.addEventListener('oAnimationStart', handler, false);
+                document.body.addEventListener('animationstart', handler, false);
+                this.addAnimations();
+            }
+        };
+        new A().init();
+    })();
+}
+// 20140730
+(function cnbeta() {
+    if (document.URL.indexOf('cnbeta.com') >= 0) {
+        var elms = document.body.querySelectorAll("p>embed");
+        Array.prototype.forEach.call(elms, function(elm) {
+            elm.style.marginLeft = "0px";
+        });
+    }
+})();
+//baidu
+if(document.URL.indexOf('www.baidu.com') >= 0){
+    if(document && document.getElementsByTagName && document.getElementById && document.body){
+        var aa = function(){
+            var all = document.body.querySelectorAll("#content_left div,#content_left table");
+            for(var i = 0; i < all.length; i++){
+                if(/display:\s?(table|block)\s!important/.test(all[i].getAttribute("style"))){all[i].style.display= "none";all[i].style.visibility='hidden';}
+            }
+            all = document.body.querySelectorAll('.result.c-container[id="1"]');
+            //if(all.length == 1) return;
+            for(var i = 0; i < all.length; i++){
+                if(all[i].innerHTML && all[i].innerHTML.indexOf('广告')>-1){
+                    all[i].style.display= "none";all[i].style.visibility='hidden';
+                }
+            }
+        }
+        aa();
+        document.getElementById('wrapper_wrapper').addEventListener('DOMSubtreeModified',aa)
+    };
+}
+// 20140922
+(function kill_360() {
+    if (document.URL.indexOf('so.com') >= 0) {
+        document.getElementById("e_idea_pp").style.display = none;
+    }
+})();
+if (document.URL.indexOf("tv.sohu.com") >= 0){
+    if (document.cookie.indexOf("fee_status=true")==-1){document.cookie='fee_status=true'};
+}
+if (document.URL.indexOf("56.com") >= 0){
+    if (document.cookie.indexOf("fee_status=true")==-1){document.cookie='fee_status=true'};
+}
+if (document.URL.indexOf("iqiyi.com") >= 0){
+    if (document.cookie.indexOf("player_forcedType=h5_VOD")==-1){
+        document.cookie='player_forcedType=h5_VOD'
+        if(localStorage.reloadTime && Date.now() - parseInt(localStorage.reloadTime)<60000){
+            console.log('no reload')
+        }else{
+            location.reload()
+            localStorage.reloadTime = Date.now();
+        }
+    }
+}
+</script><style type="text/css">object,embed{                -webkit-animation-duration:.001s;-webkit-animation-name:playerInserted;                -ms-animation-duration:.001s;-ms-animation-name:playerInserted;                -o-animation-duration:.001s;-o-animation-name:playerInserted;                animation-duration:.001s;animation-name:playerInserted;}                @-webkit-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}                @-ms-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}                @-o-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}                @keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}</style></head>
+<body>
+<a name="top"></a>
+
+<!--done-->
+<div id="home">
+<div id="header">
+	<div id="blogTitle">
+	<a id="lnkBlogLogo" href="http://www.cnblogs.com/clearsky/"><img id="blogLogo" src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/logo.gif" alt="返回主页"></a>			
+		
+<!--done-->
+<h1><a id="Header1_HeaderTitle" class="headermaintitle" href="http://www.cnblogs.com/clearsky/">千与千寻*</a></h1>
+<h2></h2>
+
+
+
+		
+	</div><!--end: blogTitle 博客的标题和副标题 -->
+	<div id="navigator">
+		
+<ul id="navList">
+<li><a id="blog_nav_sitehome" class="menu" href="http://www.cnblogs.com/">博客园</a></li>
+<li><a id="blog_nav_myhome" class="menu" href="http://www.cnblogs.com/clearsky/">首页</a></li>
+<li><a id="blog_nav_newpost" class="menu" rel="nofollow" href="https://i.cnblogs.com/EditPosts.aspx?opt=1">新随笔</a></li>
+<li><a id="blog_nav_contact" class="menu" rel="nofollow" href="https://msg.cnblogs.com/send/%E5%8D%83%E4%B8%8E%E5%8D%83%E5%AF%BB%2A">联系</a></li>
+<li><a id="blog_nav_rss" class="menu" href="http://www.cnblogs.com/clearsky/rss">订阅</a>
+<!--<a id="blog_nav_rss_image" class="aHeaderXML" href="http://www.cnblogs.com/clearsky/rss"><img src="//www.cnblogs.com/images/xml.gif" alt="订阅" /></a>--></li>
+<li><a id="blog_nav_admin" class="menu" rel="nofollow" href="https://i.cnblogs.com/">管理</a></li>
+</ul>
+		<div class="blogStats">
+			
+			<div id="blog_stats">
+<span id="stats_post_count">随笔 - 21&nbsp; </span>
+<span id="stats_article_count">文章 - 0&nbsp; </span>
+<span id="stats-comment_count">评论 - 3</span>
+</div>
+			
+		</div><!--end: blogStats -->
+	</div><!--end: navigator 博客导航栏 -->
+</div><!--end: header 头部 -->
+
+<div id="main">
+	<div id="mainContent">
+	<div class="forFlow">
+		
+<div id="post_detail">
+<!--done-->
+<div id="topics">
+	<div class="post">
+		<h1 class="postTitle">
+			<a id="cb_post_title_url" class="postTitle2" href="http://www.cnblogs.com/clearsky/p/5696286.html">css 盒子模型理解</a>
+		</h1>
+		<div class="clear"></div>
+		<div class="postBody">
+			<div id="cnblogs_post_body"><p><span style="font-size: 16px;">盒子模型是html+css中最核心的基础知识，理解了这个重要的概念才能更好的排版，进行页面布局。下面是自己积累和总结的关于css盒子模型的知识<span style="background-color: #ffff00;">^_^</span>，希望对初学者有用。</span></p>
+<p><span style="font-size: 18px;"><strong>一、css盒子模型概念</strong></span></p>
+<p><span style="font-size: 16px;">CSS css盒子模型 又称框模型 (Box Model) ，包含了元素内容（content）、内边距（padding）、边框（border）、外边距（margin）几个要素。如图：</span></p>
+<p><img src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/993105-20160722121801872-494280136.gif" alt="" width="413" height="413"></p>
+<p><span style="font-size: 16px;">图中最内部的框是元素的实际内容，也就是元素框，紧挨着元素框外部的是内边距padding，其次是边框（border），然后最外层是外边距（margin），整个构成了框模型。通常我们设置的背景显示区域，就是内容、内边距、边框这一块范围。而外边距margin是透明的，不会遮挡周边的其他元素。</span></p>
+<p><span style="font-size: 16px;">那么，元素框的总宽度 = 元素（element）的width + padding的左边距和右边距的值 + margin的左边距和右边距的值 + border的左右宽度；</span></p>
+<p><span style="font-size: 16px;">元素框的总高度 = 元素（element）的height + padding的上下边距的值 + margin的上下边距的值 ＋ border的上下宽度。</span></p>
+<p><strong><span style="font-size: 18px;">二、css 外边距合并（叠加）</span></strong></p>
+<p><span style="font-size: 16px;">两个上下方向相邻的元素框垂直相遇时，外边距会合并，合并后的外边距的高度等于两个发生合并的外边距中较高的那个边距值，如图：</span></p>
+<p><img src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/993105-20160722171008560-1813889758.png" alt=""><img src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/993105-20160722171015419-1530764673.png" alt=""></p>
+<p><span style="font-size: 16px;">比较容易理解，所以在页面中有时候遇到实际情况是需要考虑这个因素的。当然外边距合并其实也有存在的意义，如下图：</span></p>
+<p><img src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/993105-20160722171428919-1743116155.png" alt=""></p>
+<p><span style="font-size: 16px;">需要注意的是：只有普通文档流中块框的垂直外边距才会发生外边距合并。行内框、浮动框或绝对定位之间的外边距不会合并。</span></p>
+<p><span style="font-size: 16px;">css reset 中也会经常用到</span></p>
+<div class="cnblogs_code">
+<pre><span style="color: #800000;">* </span>{<span style="color: #ff0000;">
+  margin </span>:<span style="color: #0000ff;"> 0</span>;<span style="color: #ff0000;">
+  padding </span>:<span style="color: #0000ff;"> 0</span>;
+}</pre>
+</div>
+<p>&nbsp;</p>
+<p><strong><span style="font-size: 18px;">三、box-sizing属性介绍</span></strong></p>
+<p><span style="font-size: 16px;">box-sizing属性是用户界面属性里的一种，之所以介绍它，是因为这个属性跟盒子模型有关，而且在css reset中有可能会用到它。</span></p>
+<p><span style="font-size: 16px; background-color: #ff99cc;">box-sizing : content-box|border-box|inherit;</span></p>
+<p>(1)<span style="background-color: #ff99cc;"> content-box</span> ,<span style="font-size: 16px;">默认值，可以使设置的宽度和高度值应用到元素的内容框。盒子的width只包含内容。</span></p>
+<p>　　<span style="font-size: 16px;">即总宽度=margin+border+padding+width</span></p>
+<p>(2)<span style="font-size: 16px;"><span style="background-color: #ff99cc;"> border-box</span> , 设置的width值其实是除margin外的border+padding+element的总宽度。盒子的width包含border+padding+内容</span></p>
+<p><span style="font-size: 16px;">　　　　即总宽度=margin+width</span></p>
+<p><span style="font-size: 16px;">很多CSS框架，都会对盒子模型的计算方法进行简化。</span></p>
+<p><span style="font-size: 16px;">(3) <span style="background-color: #ff99cc;">inherit</span> ,&nbsp;规定应从父元素继承 box-sizing 属性的值</span></p>
+<p><span style="font-size: medium;">关于border-box的使用：</span></p>
+<p>1 一个box宽度为100%，又想要两边有内间距，这时候用就比较好<br>  2 全局设置 border-box 很好，首先它符合直觉，其次它可以省去一次又一次的加加减减，它还有一个关键作用——让有边框的盒子正常使用百分比宽度。</p>
+<p>&nbsp;</p>
+<p><strong><span style="font-size: 18px;">四、实际开发中遇到的和框模型相关的应用及小问题。</span></strong></p>
+<p><span style="font-size: 16px; background-color: #ff99cc;">1 margin越界（第一个子元素的margin-top和最后一个子元素的margin-bottom的越界问题）</span></p>
+<p><span style="font-size: 16px;">以第一个子元素的margin-top 为例：</span></p>
+<p><span style="font-size: 16px;">当父元素没有边框border时，设置第一个子元素的margin-top值的时候，会出现margin-top值加在父元素上的现象，解决方法有四个：</span></p>
+<p><span style="font-size: 16px;">（1）给父元素加边框border （副作用）</span></p>
+<p><span style="font-size: 16px;">（2）给父元素设置padding值 &nbsp;（副作用）</span></p>
+<p><span style="font-size: 16px;">（3）父元素添加 overflow：hidden （副作用）</span></p>
+<p><span style="font-size: 16px;">（4）父元素加前置内容生成。（推荐）</span></p>
+<p><span style="font-size: 16px;">以第四种方法为例：</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #800000;">.parent </span>{<span style="color: #ff0000;">
+     width </span>:<span style="color: #0000ff;"> 500px</span>;<span style="color: #ff0000;">
+     height </span>:<span style="color: #0000ff;"> 500px</span>;<span style="color: #ff0000;">
+     background-color </span>:<span style="color: #0000ff;"> red</span>;       
+}<span style="color: #800000;">
+.parent : before </span>{<span style="color: #ff0000;">
+     content </span>:<span style="color: #0000ff;"> " "</span>;<span style="color: #ff0000;">
+     display </span>:<span style="color: #0000ff;"> table</span>;
+}<span style="color: #800000;">
+
+.child </span>{<span style="color: #ff0000;">
+     width </span>:<span style="color: #0000ff;"> 200px</span>;<span style="color: #ff0000;">
+     height </span>:<span style="color: #0000ff;"> 200px</span>;<span style="color: #ff0000;">
+     background-color </span>:<span style="color: #0000ff;"> green</span>;<span style="color: #ff0000;">
+     margin-top </span>:<span style="color: #0000ff;"> 50px</span>;
+}</pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="parent"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="child"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span> 
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p><span style="font-size: 16px; background-color: #ff99cc;">2 浏览器间的盒子模型。</span></p>
+<p><span style="font-size: 16px;">（1）ul标签在Mozilla中默认是有padding值的，而在IE中只有margin有值。</span></p>
+<p><span style="font-size: 16px;">（2）标准盒子模型与IE模型之间的差异：</span></p>
+<p><span style="font-size: 16px;">　　标准的盒子模型就是上述介绍的那种，而IE模型更像是 box-sizing : border-box; 其内容宽度还包含了border和padding。解决办法就是：在html模板中加doctype声明。</span></p>
+<p><span style="font-size: 16px; background-color: #ff99cc;">3 用盒子模型画三角形</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span>
+  <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">style</span><span style="color: #0000ff;">&gt;</span><span style="background-color: #f5f5f5; color: #800000;">
+        .triangle </span><span style="background-color: #f5f5f5; color: #000000;">{</span><span style="background-color: #f5f5f5; color: #ff0000;">
+            width </span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> 0</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #ff0000;">
+            height</span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> 0</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #ff0000;">
+            border </span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> 100px solid transparent</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #ff0000;">
+            border-top </span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> 100px solid blue</span><span style="background-color: #f5f5f5; color: #000000;">; /*这里可以设置border的top、bottom、left、right四个方向的三角*/</span>
+        <span style="background-color: #f5f5f5; color: #000000;">}</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">style</span><span style="color: #0000ff;">&gt;</span>
+  <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+  <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="triangle"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+  <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span>    </pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p><span style="font-size: 16px;">页面显示结果为：</span></p>
+<p><img src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/993105-20160722183120076-268805707.png" alt=""></p>
+<p><span style="font-size: 16px;">end~~~ <span style="background-color: #ffff00;">^+^</span></span></p>
+<p><span style="font-size: 16px; background-color: #ffffff;">2016.7.22&nbsp;</span></p>
+<p><span style="font-size: 16px;">&nbsp;</span></p>
+<pre><em id="__mceDel"><span style="font-size: 16px;"><br><br><br></span></em></pre>
+<p>&nbsp;</p></div><div id="MySignature" style="display: block;">######如果对你有帮助，记得帮忙点个赞，支持我哦^o^。<br>
+######尊重原创，转载请注明。</div>
+<div class="clear"></div>
+<div id="blog_post_info_block">
+<div id="BlogPostCategory">分类: <a href="http://www.cnblogs.com/clearsky/category/856438.html" target="_blank">css</a></div>
+<div id="EntryTag"></div>
+<div id="blog_post_info"><div id="green_channel">
+        <a href="javascript:void(0);" id="green_channel_digg" onclick="DiggIt(5696286,cb_blogId,1);green_channel_success(this,&#39;谢谢推荐！&#39;);">好文要顶</a>
+            <a id="green_channel_follow" onclick="follow(&#39;8c6191dd-644a-e611-9fc1-ac853d9f53cc&#39;);" href="javascript:void(0);">关注我</a>
+    <a id="green_channel_favorite" onclick="AddToWz(cb_entryId);return false;" href="javascript:void(0);">收藏该文</a>
+    <a id="green_channel_weibo" href="javascript:void(0);" title="分享至新浪微博" onclick="ShareToTsina()"><img src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/icon_weibo_24.png" alt=""></a>
+    <a id="green_channel_wechat" href="javascript:void(0);" title="分享至微信" onclick="shareOnWechat()"><img src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/wechat.png" alt=""></a>
+</div>
+<div id="author_profile">
+    <div id="author_profile_info" class="author_profile_info">
+            <a href="http://home.cnblogs.com/u/clearsky/" target="_blank"><img src="./css 盒子模型理解 - 千与千寻_ - 博客园_files/20160715162043.png" class="author_avatar" alt=""></a>
+        <div id="author_profile_detail" class="author_profile_info">
+            <a href="http://home.cnblogs.com/u/clearsky/">千与千寻*</a><br>
+            <a href="http://home.cnblogs.com/u/clearsky/followees">关注 - 6</a><br>
+            <a href="http://home.cnblogs.com/u/clearsky/followers">粉丝 - 8</a>
+        </div>
+    </div>
+    <div class="clear"></div>
+    <div id="author_profile_honor"></div>
+    <div id="author_profile_follow">
+                <a href="javascript:void(0);" onclick="follow(&#39;8c6191dd-644a-e611-9fc1-ac853d9f53cc&#39;);return false;">+加关注</a>
+    </div>
+</div>
+<div id="div_digg">
+    <div class="diggit" onclick="votePost(5696286,&#39;Digg&#39;)">
+        <span class="diggnum" id="digg_count">4</span>
+    </div>
+    <div class="buryit" onclick="votePost(5696286,&#39;Bury&#39;)">
+        <span class="burynum" id="bury_count">0</span>
+    </div>
+    <div class="clear"></div>
+    <div class="diggword" id="digg_tips">
+    </div>
+</div>
+</div>
+<div class="clear"></div>
+<div id="post_next_prev"><a href="http://www.cnblogs.com/clearsky/p/5703499.html" class="p_n_p_prefix">» </a> 下一篇：<a href="http://www.cnblogs.com/clearsky/p/5703499.html" title="发布于2016-07-25 14:53">flexbox布局模式-- 浅谈</a><br></div>
+</div>
+
+
+		</div>
+		<div class="postDesc">posted @ <span id="post-date">2016-07-22 18:41</span> <a href="http://www.cnblogs.com/clearsky/">千与千寻*</a> 阅读(<span id="post_view_count">14704</span>) 评论(<span id="post_comment_count">0</span>)  <a href="https://i.cnblogs.com/EditPosts.aspx?postid=5696286" rel="nofollow">编辑</a> <a href="http://www.cnblogs.com/clearsky/p/5696286.html#" onclick="AddToWz(5696286);return false;">收藏</a></div>
+	</div>
+	<script type="text/javascript">var allowComments=true,cb_blogId=295211,cb_entryId=5696286,cb_blogApp=currentBlogApp,cb_blogUserGuid='8c6191dd-644a-e611-9fc1-ac853d9f53cc',cb_entryCreatedDate='2016/7/22 18:41:00';loadViewCount(cb_entryId);</script>
+	
+</div><!--end: topics 文章、评论容器-->
+</div><a name="!comments"></a><div id="blog-comments-placeholder"></div><script type="text/javascript">var commentManager = new blogCommentManager();commentManager.renderComments(0);</script>
+<div id="comment_form" class="commentform">
+<a name="commentform"></a>
+<div id="divCommentShow"></div>
+<div id="comment_nav"><span id="span_refresh_tips"></span><a href="javascript:void(0);" onclick="return RefreshCommentList();" id="lnk_RefreshComments" runat="server" clientidmode="Static">刷新评论</a><a href="http://www.cnblogs.com/clearsky/p/5696286.html#" onclick="return RefreshPage();">刷新页面</a><a href="http://www.cnblogs.com/clearsky/p/5696286.html#top">返回顶部</a></div>
+<div id="comment_form_container"><div class="login_tips">注册用户登录后才能发表评论，请 <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return login(&#39;commentform&#39;);">登录</a> 或 <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return register();">注册</a>，<a href="http://www.cnblogs.com/">访问</a>网站首页。</div></div>
+<div class="ad_text_commentbox" id="ad_text_under_commentbox"></div>
+<div id="ad_t2"></div>
+<div id="opt_under_post"></div>
+<div id="cnblogs_c1" class="c_ad_block"></div>
+<div id="under_post_news"><div class="itnews c_ad_block"><b>最新IT新闻</b>:<br> ·  <a href="http://news.cnblogs.com/n/580169/" target="_blank">国产喷气客机用上北斗导航！定位精度超GPS</a><br> ·  <a href="http://news.cnblogs.com/n/580168/" target="_blank">小米与印度连锁集团达成合作 在超市卖手机</a><br> ·  <a href="http://news.cnblogs.com/n/580167/" target="_blank">揭秘谷歌热气球项目：如何在32000米高空实现5千平方公里地面通信</a><br> ·  <a href="http://news.cnblogs.com/n/580166/" target="_blank">美团旅行国庆长假大数据：境内景区故宫人最多，境外游欧美依旧主打</a><br> ·  <a href="http://news.cnblogs.com/n/580165/" target="_blank">一文看懂搜狗招股书：90次提到AI，王小川持股5%，净利3.7亿</a><br>» <a href="http://news.cnblogs.com/" title="IT新闻" target="_blank">更多新闻...</a></div></div>
+<div id="cnblogs_c2" class="c_ad_block"></div>
+<div id="under_post_kb"><div class="itnews c_ad_block" id="kb_block"><b>最新知识库文章</b>:<br><div id="kb_recent"> ·  <a href="http://kb.cnblogs.com/page/579480/" target="_blank">实用VPC虚拟私有云设计原则</a><br> ·  <a href="http://kb.cnblogs.com/page/576251/" target="_blank">如何阅读计算机科学类的书</a><br> ·  <a href="http://kb.cnblogs.com/page/578103/" target="_blank">Google 及其云智慧</a><br> ·  <a href="http://kb.cnblogs.com/page/575829/" target="_blank">做到这一点，你也可以成为优秀的程序员</a><br> ·  <a href="http://kb.cnblogs.com/page/566880/" target="_blank">写给立志做码农的大学生</a><br></div>» <a href="http://kb.cnblogs.com/" target="_blank">更多知识库文章...</a></div></div>
+<div id="HistoryToday" class="c_ad_block"></div>
+<script type="text/javascript">
+    fixPostBody();
+    setTimeout(function () { incrementViewCount(cb_entryId); }, 50);
+    deliverAdT2();
+    deliverAdC1();
+    deliverAdC2();    
+    loadNewsAndKb();
+    loadBlogSignature();
+    LoadPostInfoBlock(cb_blogId, cb_entryId, cb_blogApp, cb_blogUserGuid);
+    GetPrevNextPost(cb_entryId, cb_blogId, cb_entryCreatedDate);
+    loadOptUnderPost();
+    GetHistoryToday(cb_blogId, cb_blogApp, cb_entryCreatedDate);   
+</script>
+</div>
+
+
+	</div><!--end: forFlow -->
+	</div><!--end: mainContent 主体内容容器-->
+
+	<div id="sideBar">
+		<div id="sideBarMain">
+			
+<!--done-->
+<div class="newsItem">
+<h3 class="catListTitle">公告</h3>
+	<div id="blog-news"><div id="profile_block">昵称：<a href="http://home.cnblogs.com/u/clearsky/">千与千寻*</a><br>园龄：<a href="http://home.cnblogs.com/u/clearsky/" title="入园时间：2016-07-15">1年2个月</a><br>粉丝：<a href="http://home.cnblogs.com/u/clearsky/followers/">8</a><br>关注：<a href="http://home.cnblogs.com/u/clearsky/followees/">6</a><div id="p_b_follow"><a href="javascript:void(0);" onclick="follow(&#39;8c6191dd-644a-e611-9fc1-ac853d9f53cc&#39;)">+加关注</a></div></div></div><script type="text/javascript">loadBlogNews();</script>
+</div>
+
+			<div id="blog-calendar" style=""><table id="blogCalendar" class="Cal" cellspacing="0" cellpadding="0" title="Calendar">
+	<tbody><tr><td colspan="7"><table class="CalTitle" cellspacing="0">
+		<tbody><tr><td class="CalNextPrev"><a href="javascript:void(0);" onclick="loadBlogCalendar(&#39;2017/09/01&#39;);return false;">&lt;</a></td><td align="center">2017年10月</td><td class="CalNextPrev" align="right"><a href="javascript:void(0);" onclick="loadBlogCalendar(&#39;2017/11/01&#39;);return false;">&gt;</a></td></tr>
+	</tbody></table></td></tr><tr><th class="CalDayHeader" align="center" abbr="日" scope="col">日</th><th class="CalDayHeader" align="center" abbr="一" scope="col">一</th><th class="CalDayHeader" align="center" abbr="二" scope="col">二</th><th class="CalDayHeader" align="center" abbr="三" scope="col">三</th><th class="CalDayHeader" align="center" abbr="四" scope="col">四</th><th class="CalDayHeader" align="center" abbr="五" scope="col">五</th><th class="CalDayHeader" align="center" abbr="六" scope="col">六</th></tr><tr><td class="CalOtherMonthDay" align="center">24</td><td class="CalOtherMonthDay" align="center">25</td><td class="CalOtherMonthDay" align="center">26</td><td class="CalOtherMonthDay" align="center">27</td><td class="CalOtherMonthDay" align="center">28</td><td class="CalOtherMonthDay" align="center">29</td><td class="CalOtherMonthDay" align="center">30</td></tr><tr><td class="CalWeekendDay" align="center">1</td><td align="center">2</td><td align="center">3</td><td align="center">4</td><td align="center">5</td><td align="center">6</td><td class="CalWeekendDay" align="center">7</td></tr><tr><td class="CalWeekendDay" align="center">8</td><td align="center">9</td><td align="center">10</td><td align="center">11</td><td align="center">12</td><td align="center">13</td><td class="CalTodayDay" align="center">14</td></tr><tr><td class="CalWeekendDay" align="center">15</td><td align="center">16</td><td align="center">17</td><td align="center">18</td><td align="center">19</td><td align="center">20</td><td class="CalWeekendDay" align="center">21</td></tr><tr><td class="CalWeekendDay" align="center">22</td><td align="center">23</td><td align="center">24</td><td align="center">25</td><td align="center">26</td><td align="center">27</td><td class="CalWeekendDay" align="center">28</td></tr><tr><td class="CalWeekendDay" align="center">29</td><td align="center">30</td><td align="center">31</td><td class="CalOtherMonthDay" align="center">1</td><td class="CalOtherMonthDay" align="center">2</td><td class="CalOtherMonthDay" align="center">3</td><td class="CalOtherMonthDay" align="center">4</td></tr>
+</tbody></table></div><script type="text/javascript">loadBlogDefaultCalendar();</script>
+			
+			<div id="leftcontentcontainer">
+				<div id="blog-sidecolumn"><div id="sidebar_search" class="sidebar-block">
+<div id="sidebar_search" class="mySearch">
+<h3 class="catListTitle">搜索</h3>
+<div id="sidebar_search_box">
+<div id="widget_my_zzk" class="div_my_zzk"><input type="text" id="q" onkeydown="return zzk_go_enter(event);" class="input_my_zzk">&nbsp;<input onclick="zzk_go()" type="button" value="找找看" id="btnZzk" class="btn_my_zzk"></div>
+<div id="widget_my_google" class="div_my_zzk"><input type="text" name="google_q" id="google_q" onkeydown="return google_go_enter(event)" class="input_my_zzk">&nbsp;<input onclick="google_go()" type="button" value="谷歌搜索" class="btn_my_zzk"></div>
+</div>
+</div>
+
+</div><div id="sidebar_shortcut" class="sidebar-block">
+<div class="catListLink">
+<h3 class="catListTitle">常用链接</h3>
+<ul>
+<li><a href="http://www.cnblogs.com/clearsky/p/" title="我的博客的随笔列表">我的随笔</a></li><li><a href="http://www.cnblogs.com/clearsky/MyComments.html" title="我发表过的评论列表">我的评论</a></li><li><a href="http://www.cnblogs.com/clearsky/OtherPosts.html" title="我评论过的随笔列表">我的参与</a></li><li><a href="http://www.cnblogs.com/clearsky/RecentComments.html" title="我的博客的评论列表">最新评论</a></li><li><a href="http://www.cnblogs.com/clearsky/tag/" title="我的博客的标签列表">我的标签</a></li>
+</ul>
+<div id="itemListLin_con" style="display:none;">
+<ul>
+
+</ul>
+</div>
+</div></div><div id="sidebar_toptags" class="sidebar-block"></div><div id="sidebar_categories">
+<div id="sidebar_postcategory" class="catListPostCategory sidebar-block">
+<h3 class="catListTitle">随笔分类</h3>
+
+<ul>
+
+<li><a id="CatList_LinkList_0_Link_0" href="http://www.cnblogs.com/clearsky/category/903286.html">application</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_1" href="http://www.cnblogs.com/clearsky/category/903283.html">component</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_2" href="http://www.cnblogs.com/clearsky/category/856438.html">css(6)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_3" href="http://www.cnblogs.com/clearsky/category/857963.html">css3(3)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_4" href="http://www.cnblogs.com/clearsky/category/1020737.html">env</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_5" href="http://www.cnblogs.com/clearsky/category/903284.html">frame</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_6" href="http://www.cnblogs.com/clearsky/category/857970.html">html(2)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_7" href="http://www.cnblogs.com/clearsky/category/857972.html">JavaScript(7)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_8" href="http://www.cnblogs.com/clearsky/category/903268.html">plugin(1)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_9" href="http://www.cnblogs.com/clearsky/category/903285.html">tool(2)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_10" href="http://www.cnblogs.com/clearsky/category/912806.html">twig(1)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_11" href="http://www.cnblogs.com/clearsky/category/1015131.html">vue(1)</a> </li>
+
+</ul>
+
+</div>
+
+<div id="sidebar_postarchive" class="catListPostArchive sidebar-block">
+<h3 class="catListTitle">随笔档案</h3>
+
+<ul>
+
+<li><a id="CatList_LinkList_1_Link_0" href="http://www.cnblogs.com/clearsky/archive/2017/06.html">2017年6月 (3)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_1" href="http://www.cnblogs.com/clearsky/archive/2017/02.html">2017年2月 (1)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_2" href="http://www.cnblogs.com/clearsky/archive/2017/01.html">2017年1月 (2)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_3" href="http://www.cnblogs.com/clearsky/archive/2016/11.html">2016年11月 (4)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_4" href="http://www.cnblogs.com/clearsky/archive/2016/10.html">2016年10月 (3)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_5" href="http://www.cnblogs.com/clearsky/archive/2016/08.html">2016年8月 (5)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_6" href="http://www.cnblogs.com/clearsky/archive/2016/07.html">2016年7月 (3)</a> </li>
+
+</ul>
+
+</div>
+
+</div><div id="sidebar_recentcomments" class="sidebar-block"><div id="recent_comments_wrap">
+<div class="catListComment">
+<h3 class="catListTitle">最新评论</h3>
+
+	<div id="RecentCommentsBlock"><ul>
+        <li class="recent_comment_title"><a href="http://www.cnblogs.com/clearsky/p/6353906.html#3611127">1. Re:css 水平垂直居中的方法总结</a></li>
+        <li class="recent_comment_body">转载你的东西</li>
+        <li class="recent_comment_author">--唐忆茹</li>
+        <li class="recent_comment_title"><a href="http://www.cnblogs.com/clearsky/p/5705209.html#3490193">2. Re:FancyBox——jQuery弹出窗口插件</a></li>
+        <li class="recent_comment_body">@cressme请问可以说具体一点吗？不太理解你的问题。。。...</li>
+        <li class="recent_comment_author">--千与千寻*</li>
+        <li class="recent_comment_title"><a href="http://www.cnblogs.com/clearsky/p/5705209.html#3478423">3. Re:FancyBox——jQuery弹出窗口插件</a></li>
+        <li class="recent_comment_body">请问thumbs的position能自定义吗？非常感谢，小白一枚</li>
+        <li class="recent_comment_author">--cressme</li>
+</ul>
+</div>
+</div>
+</div></div><div id="sidebar_topviewedposts" class="sidebar-block"><div id="topview_posts_wrap">
+<div class="catListView">
+<h3 class="catListTitle">阅读排行榜</h3>
+	<div id="TopViewPostsBlock"><ul><li><a href="http://www.cnblogs.com/clearsky/p/5696286.html">1. css 盒子模型理解(14705)</a></li><li><a href="http://www.cnblogs.com/clearsky/p/5705209.html">2. FancyBox——jQuery弹出窗口插件(4564)</a></li><li><a href="http://www.cnblogs.com/clearsky/p/5774152.html">3. css Hack 以及css的一些兼容问题小结(659)</a></li><li><a href="http://www.cnblogs.com/clearsky/p/6089741.html">4. gulp基础使用总结(595)</a></li><li><a href="http://www.cnblogs.com/clearsky/p/5754682.html">5. JavaScript中事件绑定的方法总结(549)</a></li></ul></div>
+</div>
+</div></div><div id="sidebar_topcommentedposts" class="sidebar-block"><div id="topfeedback_posts_wrap">
+<div class="catListFeedback">
+<h3 class="catListTitle">评论排行榜</h3>
+	<div id="TopFeedbackPostsBlock"><ul><li><a href="http://www.cnblogs.com/clearsky/p/5705209.html">1. FancyBox——jQuery弹出窗口插件(2)</a></li><li><a href="http://www.cnblogs.com/clearsky/p/6353906.html">2. css 水平垂直居中的方法总结(1)</a></li></ul></div>
+</div>
+</div></div><div id="sidebar_topdiggedposts" class="sidebar-block"><div id="topdigg_posts_wrap">
+<div class="catListView">
+<h3 class="catListTitle">推荐排行榜</h3>
+<div id="TopDiggPostsBlock"><ul><li><a href="http://www.cnblogs.com/clearsky/p/5696286.html">1. css 盒子模型理解(4)</a></li><li><a href="http://www.cnblogs.com/clearsky/p/6353906.html">2. css 水平垂直居中的方法总结(4)</a></li><li><a href="http://www.cnblogs.com/clearsky/p/5705209.html">3. FancyBox——jQuery弹出窗口插件(1)</a></li></ul></div>
+</div></div></div></div><script type="text/javascript">loadBlogSideColumn();</script>
+			</div>
+			
+		</div><!--end: sideBarMain -->
+	</div><!--end: sideBar 侧边栏容器 -->
+	<div class="clear"></div>
+	</div><!--end: main -->
+	<div class="clear"></div>
+	<div id="footer">
+		
+<!--done-->
+Copyright ©2017 千与千寻*
+	</div><!--end: footer -->
+</div><!--end: home 自定义的最大容器 -->
+
+
+</body></html>
